@@ -23,7 +23,7 @@ export async function listar(req, res) {
   try {
     const db = await getDatabase();
     const usuarios = await db.all(
-      'SELECT id, nome, email, telefone, foto FROM usuarios ORDER BY id'
+      'SELECT id, nome, email, telefone, foto, tipoUsuario FROM usuarios ORDER BY id'
     );
     res.json(usuarios);
   } catch (erro) {
@@ -38,7 +38,7 @@ export async function buscarPorId(req, res) {
   try {
     const db = await getDatabase();
     const usuario = await db.get(
-      'SELECT id, nome, email, telefone, foto FROM usuarios WHERE id = ?',
+      'SELECT id, nome, email, telefone, foto, tipoUsuario FROM usuarios WHERE id = ?',
       [id]
     );
 
@@ -54,9 +54,9 @@ export async function buscarPorId(req, res) {
 
 // POST /usuarios — cadastro público
 export async function criar(req, res) {
-  const { nome, email, telefone, senha } = req.body;
+  const { nome, email, telefone, senha, tipoUsuario } = req.body;
 
-  if (!nome || !email || !telefone || !senha) {
+  if (!nome || !email || !telefone || !senha|| !tipoUsuario ) {
     return res.status(400).json({ mensagem: 'Campos obrigatórios ausentes.' });
   }
 

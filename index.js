@@ -9,12 +9,17 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 
-import usuariosRoutes from './src/routes/usuariosRoutes.js';
-import tarefasRoutes from './src/routes/tarefasRoutes.js';
+import authRoutes from './src/routes/authRoutes.js';
+import clienteRoutes from './src/routes/clienteRoutes.js';
+import petRoutes from './src/routes/petRoutes.js';
+import servicoRoutes from './src/routes/servicoRoutes.js';
+import agendamentoRoutes from './src/routes/agendamentoRoutes.js';
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+
+const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
+
 
 // ────────────────────────────────────────────────────────────────────────────
 // Middlewares globais
