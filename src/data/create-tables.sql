@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS pets (
         nome     TEXT NOT NULL,
         raca  TEXT,
         porte TEXT,
-        peso INTEGER,
+        peso NUMERIC(10,2),
                 usuarioId  INTEGER NOT NULL,
         FOREIGN KEY (usuarioId) REFERENCES usuarios (id) ON DELETE CASCADE
 );
@@ -29,11 +29,11 @@ CREATE TABLE IF NOT EXISTS servicos (
         id         INTEGER PRIMARY KEY GENERATED ALWAYS as IDENTITY,
         nome     TEXT NOT NULL,
         descricao  TEXT,
-        preco INTEGER,
+        preco NUMERIC(10,2)
       );
 
 CREATE TABLE IF NOT EXISTS servicoPet (
         idPet         INTEGER NOT NULL,
         idServico     INTEGER NOT NULL,
-        IdData INTEGER,
+        IdData INTEGER
       );
