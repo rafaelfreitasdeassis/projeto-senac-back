@@ -110,7 +110,7 @@ export async function atualizar(req, res) {
     );
 
     if (!atual) {
-      return res.status(404).json({ mensagem: 'pets não encontrada.' });
+      return res.status(404).json({ mensagem: 'pets não encontrado.' });
     }
 
     // operador ?? mantém o valor atual quando o campo não vem no body
