@@ -100,12 +100,12 @@ export async function criar(req, res) {
 // PUT /pets/:id — atualização parcial. Só permite mexer na própria pets.
 export async function atualizar(req, res) {
   const { id } = req.params;
-  const { titulo, descricao, status, concluida } = req.body;
+  const { raca, nome, porte, peso, usuarioId } = req.body;
 
   try {
     const db = await getDatabase();
     const atual = await db.get(
-      'SELECT id, titulo, descricao, status, usuarioId FROM pets WHERE id = ? AND usuarioId = ?',
+      'SELECT id, raca, nome, porte, peso, usuarioId FROM pets WHERE id = ? AND usuarioId = ?',
       [id, req.usuarioId]
     );
 
