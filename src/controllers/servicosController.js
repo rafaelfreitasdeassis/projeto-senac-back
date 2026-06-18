@@ -1,64 +1,208 @@
-// usuariosController.js — CRUD de usuários + login + perfil
-//
-// Conceitos da UC3 exercitados aqui:
-// - Bloco A / Aula 12 e 13: SQLite no Node com prepared statements (?)
-// - Bloco C / Aula 2: SQL Injection — usar ? em vez de concatenar string
-// - Bloco C / Aula 3: bcrypt.hash (cadastro) e bcrypt.compare (login)
-// - Bloco B / Aula 2 (alternativa do slide 33): autenticação por JWT
-// - Bloco C / Aula 1: Confidencialidade — nunca devolver `senha` no JSON
+// servicosController.js
 
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { getDatabase } from '../data/db.js';
-import { processarUploadImagem } from '../middlewares/uploadImagem.js';
 
-const SALT_ROUNDS = 10;
-
-function ehErroEmailDuplicado(erro) {
-  return erro?.code === '23505' || erro?.message?.includes('UNIQUE constraint failed');
-}
-
-// GET /usuarios — lista todos (sem o campo senha)
+// GET /servicos
 export async function listar(req, res) {
   try {
     const db = await getDatabase();
-    const pets = await db.all(
-      'SELECT id, nome, raca, porte, peso, usuarioId FROM pet ORDER BY id'
+
+    const servicos = await db.all(
+      'SELECT id, nome, descricao, preco FROM servicos ORDER BY nome'
     );
-    res.json(pets);
+
+    res.json(servicos);
+
   } catch (erro) {
-    console.error('[pet.listar]', erro);
-    res.status(500).json({ mensagem: 'Erro ao buscar pet.' });
+    console.error('[servicos.listar]', erro);
+
+    res.status(500).json({
+      mensagem: 'Erro ao buscar serviços.'
+    });
   }
 }
 
-// GET /usuarios/:id
+// GET /servicos/:id
 export async function buscarPorId(req, res) {
   const { id } = req.params;
+
   try {
     const db = await getDatabase();
-    const pets = await db.get(
-      'SELECT id, nome, raca, porte, peso, usuarioId FROM pet WHERE id = ?',
+
+    const servico = await db.get(
+      'SELECT id, nome, descricao, preco FROM servicos WHERE id = ?',
       [id]
     );
 
-    if (!pets) {
-      return res.status(404).json({ mensagem: 'Pet não encontrado.' });
+    if (!servico) {
+      return res.status(404).json({
+        mensagem: 'Serviço não encontrado.'
+      });
     }
-    res.json(pets);
+
+    res.json(servico);
+
   } catch (erro) {
-    console.error('[pets.buscarPorId]', erro);
-    res.status(500).json({ mensagem: 'Erro ao buscar pet.' });
+    console.error('[servicos.buscarPorId]', erro);
+
+    res.status(500).json({
+      mensagem: 'Erro ao buscar serviço.'
+    });
   }
 }
 
-// POST /usuarios — cadastro público
+// POST /servicos
 export async function criar(req, res) {
-  const { nome, raca, porte, peso, usuarioId } = req.body;
 
-  if (!nome || !raca || !porte || !usuarioId ) {
-    return res.status(400).json({ mensagem: 'Campos obrigatórios ausentes.' });
+  const {
+    nome,
+    descricao,
+    preco
+  } = req.body;
+
+  if (!nome || !nome.trim()) {
+    return res.status(400).json({
+      mensagem: 'Nome do serviço é obrigatório.'
+    });
   }
 
+  if (preco == null || isNaN(preco)) {
+    return res.status(400).json({
+      mensagem: 'Preço inválido.'
+    });
+  }
+
+  try {
+
+    const db = await getDatabase();
+
+    const resultado = await db.run(
+      `
+      INSERT INTO servicos (
+        nome,
+        descricao,
+        preco
+      )
+      VALUES (?, ?, ?)
+      `,
+      [
+        nome.trim(),
+        descricao?.trim() || null,
+        preco
+      ]
+    );
+
+    res.status(201).json({
+      id: resultado.lastID,
+      nome: nome.trim(),
+      descricao: descricao?.trim() || null,
+      preco
+    });
+
+  } catch (erro) {
+
+    console.error('[servicos.criar]', erro);
+
+    res.status(500).json({
+      mensagem: 'Erro ao criar serviço.'
+    });
+  }
 }
 
+// PUT /servicos/:id
+export async function atualizar(req, res) {
+
+  const { id } = req.params;
+
+  const {
+    nome,
+    descricao,
+    preco
+  } = req.body;
+
+  try {
+
+    const db = await getDatabase();
+
+    const atual = await db.get(
+      'SELECT id, nome, descricao, preco FROM servicos WHERE id = ?',
+      [id]
+    );
+
+    if (!atual) {
+      return res.status(404).json({
+        mensagem: 'Serviço não encontrado.'
+      });
+    }
+
+    const novoNome = nome ?? atual.nome;
+    const novaDescricao = descricao ?? atual.descricao;
+    const novoPreco = preco ?? atual.preco;
+
+    await db.run(
+      `
+      UPDATE servicos
+      SET
+        nome = ?,
+        descricao = ?,
+        preco = ?
+      WHERE id = ?
+      `,
+      [
+        novoNome,
+        novaDescricao,
+        novoPreco,
+        id
+      ]
+    );
+
+    res.json({
+      id: Number(id),
+      nome: novoNome,
+      descricao: novaDescricao,
+      preco: novoPreco
+    });
+
+  } catch (erro) {
+
+    console.error('[servicos.atualizar]', erro);
+
+    res.status(500).json({
+      mensagem: 'Erro ao atualizar serviço.'
+    });
+  }
+}
+
+// DELETE /servicos/:id
+export async function remover(req, res) {
+
+  const { id } = req.params;
+
+  try {
+
+    const db = await getDatabase();
+
+    const resultado = await db.run(
+      'DELETE FROM servicos WHERE id = ?',
+      [id]
+    );
+
+    if (resultado.changes === 0) {
+      return res.status(404).json({
+        mensagem: 'Serviço não encontrado.'
+      });
+    }
+
+    res.json({
+      mensagem: 'Serviço removido com sucesso.'
+    });
+
+  } catch (erro) {
+
+    console.error('[servicos.remover]', erro);
+
+    res.status(500).json({
+      mensagem: 'Erro ao remover serviço.'
+    });
+  }
+}
