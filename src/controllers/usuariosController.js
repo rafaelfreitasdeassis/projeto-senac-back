@@ -56,7 +56,7 @@ export async function buscarPorId(req, res) {
 export async function criar(req, res) {
   const { nome, email, telefone, senha, tipoUsuario } = req.body;
 
-  if (!nome || !email || !telefone || !senha|| !tipoUsuario ) {
+  if (!nome || !email || !telefone || !senha || !tipoUsuario) {
     return res.status(400).json({ mensagem: 'Campos obrigatórios ausentes.' });
   }
 
@@ -114,59 +114,93 @@ res.status(201).json({
 
 // PUT /usuarios/:id — atualização parcial. Só o próprio usuário pode editar.
 export async function atualizar(req, res) {
-  const idAlvo = Number(req.params.id);
+const idAlvo = Number(req.params.id);
 
   // pilar Integridade (UC3 Bloco C / Aula 1):
   // ninguém edita dados de outra pessoa.
-  if (idAlvo !== req.usuarioId) {
-    return res.status(403).json({
-      mensagem: 'Você só pode editar o próprio usuário.'
+  if (!Number.isInteger(idAlvo)) {
+return res.status(400).json({
+mensagem: 'ID inválido.'
+});
+}
+
+// ninguém pode editar outro usuário
+if (idAlvo !== req.usuarioId) {
+return res.status(403).json({
+mensagem: 'Você só pode editar o próprio usuário.'
+});
+}
+
+const {
+nome,
+email,
+telefone,
+senha
+} = req.body;
+
+try {
+let novaFotoUpload = null;
+
+const contentType = req.headers['content-type'] || '';
+
+if (contentType.includes('multipart/form-data')) {
+  const upload = await processarUploadImagem(req, res, {
+    pasta: 'perfil',
+    campo: 'foto'
+  });
+
+  novaFotoUpload = upload?.publicUrl ?? null;
+}
+
+const db = await getDatabase();
+
+const atual = await db.get(
+  'SELECT * FROM usuarios WHERE id = ?',
+  [idAlvo]
+);
+
+if (!atual) {
+  return res.status(404).json({
+    mensagem: 'Usuário não encontrado.'
+  });
+}
+
+// validação de e-mail
+if (email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({
+      mensagem: 'E-mail inválido.'
+    });
+  }
+}
+
+const novoNome = nome ?? atual.nome;
+const novoEmail = email ?? atual.email;
+const novoTelefone = telefone ?? atual.telefone;
+
+const novaFoto =
+  novaFotoUpload ??
+  req.body?.foto ??
+  atual.foto;
+
+// usuário comum não pode alterar o próprio perfil de acesso
+const novoTipoUsuario = atual.tipoUsuario;
+
+let novaSenha = atual.senha;
+
+if (senha) {
+  if (typeof senha !== 'string' || senha.length < 6) {
+    return res.status(400).json({
+      mensagem: 'A senha deve ter pelo menos 6 caracteres.'
     });
   }
 
-  const {
-  nome,
-  email,
-  telefone,
-  senha,
-  tipoUsuario
-} = req.body;
+  novaSenha = await bcrypt.hash(senha, SALT_ROUNDS);
+}
 
-  try {
-    let novaFotoUpload = null;
-
-    const contentType = req.headers['content-type'] || '';
-    if (contentType.includes('multipart/form-data')) {
-      const upload = await processarUploadImagem(req, res, { pasta: 'perfil', campo: 'foto' });
-      novaFotoUpload = upload.publicUrl;
-    }
-
-    const db = await getDatabase();
-    const atual = await db.get('SELECT * FROM usuarios WHERE id = ?', [idAlvo]);
-
-    if (!atual) {
-      return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
-    }
-
-    const novoNome = nome ?? atual.nome;
-    const novoEmail = email ?? atual.email;
-    const novoTelefone = telefone ?? atual.telefone;
-    const novaFoto = novaFotoUpload ?? req.body.foto ?? atual.foto;
-    const novoTipoUsuario =
-  tipoUsuario ?? atual.tipoUsuario;
-    let novaSenha = atual.senha;
-
-    if (senha) {
-      if (typeof senha !== 'string' || senha.length < 6) {
-        return res.status(400).json({
-          mensagem: 'A senha deve ter pelo menos 6 caracteres.'
-        });
-      }
-      novaSenha = await bcrypt.hash(senha, SALT_ROUNDS);
-    }
-
-    await db.run(
-      await db.run(
+await db.run(
   `
   UPDATE usuarios
   SET
@@ -189,24 +223,38 @@ export async function atualizar(req, res) {
   ]
 );
 
-    res.json({
-      id: idAlvo,
-      nome: novoNome,
-      email: novoEmail,
-      telefone: novoTelefone,
-      foto: novaFoto
-    });
-  } catch (erro) {
-    if (erro?.message === 'A imagem deve ter no máximo 5MB.' || erro?.message === 'Apenas arquivos de imagem são permitidos.') {
-      return res.status(400).json({ mensagem: erro.message });
-    }
+res.json({
+  id: idAlvo,
+  nome: novoNome,
+  email: novoEmail,
+  telefone: novoTelefone,
+  foto: novaFoto,
+  tipoUsuario: novoTipoUsuario
+});
 
-    if (ehErroEmailDuplicado(erro)) {
-      return res.status(409).json({ mensagem: 'Este e-mail já está cadastrado.' });
-    }
-    console.error('[usuarios.atualizar]', erro);
-    res.status(500).json({ mensagem: 'Erro ao atualizar usuário.' });
-  }
+} catch (erro) {
+if (
+erro?.message === 'A imagem deve ter no máximo 5MB.' ||
+erro?.message === 'Apenas arquivos de imagem são permitidos.'
+) {
+return res.status(400).json({
+mensagem: erro.message
+});
+}
+
+if (ehErroEmailDuplicado(erro)) {
+  return res.status(409).json({
+    mensagem: 'Este e-mail já está cadastrado.'
+  });
+}
+
+console.error('[usuarios.atualizar]', erro);
+
+res.status(500).json({
+  mensagem: 'Erro ao atualizar usuário.'
+});
+
+}
 }
 
 // DELETE /usuarios/:id — só o próprio usuário pode se remover.
