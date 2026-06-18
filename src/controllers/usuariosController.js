@@ -74,18 +74,33 @@ export async function criar(req, res) {
     // bcrypt.hash → guarda HASH, não a senha em texto puro (UC3 Bloco C / Aula 3)
     const senhaHash = await bcrypt.hash(senha, SALT_ROUNDS);
 
-    const resultado = await db.run(
-      'INSERT INTO usuarios (nome, email, telefone, senha) VALUES (?, ?, ?, ?)',
-      [nome, email, telefone, senhaHash]
-    );
-
-    res.status(201).json({
-      id: resultado.lastID,
-      nome,
-      email,
-      telefone,
-      foto: null
-    });
+const resultado = await db.run(
+  `
+  INSERT INTO usuarios (
+    nome,
+    email,
+    telefone,
+    senha,
+    tipoUsuario
+  )
+  VALUES (?, ?, ?, ?, ?)
+  `,
+  [
+    nome,
+    email,
+    telefone,
+    senhaHash,
+    tipoUsuario
+  ]
+);
+res.status(201).json({
+  id: resultado.lastID,
+  nome,
+  email,
+  telefone,
+  foto: null,
+  tipoUsuario
+});
   } catch (erro) {
     // a coluna email tem UNIQUE no CREATE TABLE — tratamos o erro
     // de violação dessa restrição como 409 Conflict.
@@ -109,7 +124,13 @@ export async function atualizar(req, res) {
     });
   }
 
-  const { nome, email, telefone, senha } = req.body;
+  const {
+  nome,
+  email,
+  telefone,
+  senha,
+  tipoUsuario
+} = req.body;
 
   try {
     let novaFotoUpload = null;
@@ -131,6 +152,8 @@ export async function atualizar(req, res) {
     const novoEmail = email ?? atual.email;
     const novoTelefone = telefone ?? atual.telefone;
     const novaFoto = novaFotoUpload ?? req.body.foto ?? atual.foto;
+    const novoTipoUsuario =
+  tipoUsuario ?? atual.tipoUsuario;
     let novaSenha = atual.senha;
 
     if (senha) {
@@ -143,9 +166,28 @@ export async function atualizar(req, res) {
     }
 
     await db.run(
-      'UPDATE usuarios SET nome = ?, email = ?, telefone = ?, senha = ?, foto = ? WHERE id = ?',
-      [novoNome, novoEmail, novoTelefone, novaSenha, novaFoto, idAlvo]
-    );
+      await db.run(
+  `
+  UPDATE usuarios
+  SET
+    nome = ?,
+    email = ?,
+    telefone = ?,
+    senha = ?,
+    foto = ?,
+    tipoUsuario = ?
+  WHERE id = ?
+  `,
+  [
+    novoNome,
+    novoEmail,
+    novoTelefone,
+    novaSenha,
+    novaFoto,
+    novoTipoUsuario,
+    idAlvo
+  ]
+);
 
     res.json({
       id: idAlvo,
@@ -216,10 +258,20 @@ export async function login(req, res) {
 
   try {
     const db = await getDatabase();
-    const usuario = await db.get(
-      'SELECT id, nome, email, senha, foto FROM usuarios WHERE email = ?',
-      [email]
-    );
+ const usuario = await db.get(
+  `
+  SELECT
+    id,
+    nome,
+    email,
+    senha,
+    foto,
+    tipoUsuario
+  FROM usuarios
+  WHERE email = ?
+  `,
+  [email]
+);
 
     // mensagem genérica de propósito: não revela se foi o e-mail ou a senha.
     // Isso dificulta força bruta direcionada (UC3 Bloco C / Aula 2).
@@ -242,7 +294,13 @@ export async function login(req, res) {
 
     res.json({
       token,
-      usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email, foto: usuario.foto ?? null }
+      usuario: {
+  id: usuario.id,
+  nome: usuario.nome,
+  email: usuario.email,
+  foto: usuario.foto ?? null,
+  tipoUsuario: usuario.tipoUsuario
+}
     });
   } catch (erro) {
     console.error('[usuarios.login]', erro);
@@ -256,7 +314,27 @@ export async function perfil(req, res) {
   try {
     const db = await getDatabase();
     const usuario = await db.get(
-      'SELECT id, nome, email, telefone, foto FROM usuarios WHERE id = ?',
+      `
+      SELECT
+        id,
+        nome,
+        email,
+        telefone,
+        foto,
+        tipoUsuario
+      FROM usuarios
+      WHERE id = ?
+      `,
+      [req.usuarioId]
+    );
+
+    if (!usuario) {
+      return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
+    }
+    res.json(usuario);
+  tipoUsuario
+FROM usuarios
+WHERE id = ?',
       [req.usuarioId]
     );
 
