@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS pets (
         raca  TEXT,
         porte TEXT,
         peso NUMERIC(10,2),
-                usuarioId  INTEGER NOT NULL,
+        usuarioId  INTEGER NOT NULL,
        
         FOREIGN KEY (usuarioId) REFERENCES usuarios (id) ON DELETE CASCADE
 );

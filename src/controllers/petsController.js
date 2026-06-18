@@ -86,14 +86,15 @@ export async function criar(req, res) {
 
     res.status(201).json({
       id: resultado.lastID,
-      titulo: titulo.trim(),
-      descricao: descricao?.trim() || null,
-      status: statusFinal,
+      raca: raca.trim(),
+      nome: nome?.trim() || null,
+      porte: porte,
+      peso: peso,
       usuarioId: req.usuarioId
     });
   } catch (erro) {
     console.error('[pets.criar]', erro);
-    res.status(500).json({ mensagem: 'Erro ao criar pets.' });
+    res.status(500).json({ mensagem: 'Erro ao criar pet.' });
   }
 }
 
@@ -114,26 +115,30 @@ export async function atualizar(req, res) {
     }
 
     // operador ?? mantém o valor atual quando o campo não vem no body
-    const novoTitulo = titulo ?? atual.titulo;
-    const novaDescricao = descricao ?? atual.descricao;
+    const novoRaca = raca ?? atual.raca;
+    const novoNome = nome ?? atual.nome;
+    const novoPorte = porte ?? atual.porte;
+    const novoPeso = peso ?? atual.peso;
+    const novoUsuarioId = usuarioId ?? atual.usuarioId;
     let novoStatus = atual.status;
     if (typeof concluida === 'boolean') {
-      novoStatus = concluida ? 'Concluido' : 'Novo';
+      novoCadastro = concluido ? 'Concluido' : 'Novo';
     }
     if (typeof status === 'string') {
       novoStatus = normalizarStatus(status, atual.status);
     }
 
     await db.run(
-      'UPDATE pets SET titulo = ?, descricao = ?, status = ? WHERE id = ?',
-      [novoTitulo, novaDescricao, novoStatus, id]
+      'UPDATE pets SET raca = ?, nome = ?, porte = ?, peso = ?, usuarioId = ? WHERE id = ?',
+      [novoRaca, novoNome, novoPorte, novoPeso, novoUsuarioId, id]
     );
 
     res.json({
       id: Number(id),
-      titulo: novoTitulo,
-      descricao: novaDescricao,
-      status: novoStatus,
+      raca: novoRaca,
+      nome: novoNome,
+      porte: novoPorte,
+      peso: novoPeso,
       usuarioId: req.usuarioId
     });
   } catch (erro) {
@@ -153,11 +158,11 @@ export async function remover(req, res) {
     );
 
     if (resultado.changes === 0) {
-      return res.status(404).json({ mensagem: 'pets não encontrada.' });
+      return res.status(404).json({ mensagem: 'pet não encontrado.' });
     }
-    res.json({ mensagem: 'pets removida com sucesso.' });
+    res.json({ mensagem: 'pet removido com sucesso.' });
   } catch (erro) {
     console.error('[pets.remover]', erro);
-    res.status(500).json({ mensagem: 'Erro ao remover pets.' });
+    res.status(500).json({ mensagem: 'Erro ao remover pet.' });
   }
 }
