@@ -7,7 +7,6 @@
 
 import { getDatabase } from '../data/db.js';
 
-
 // GET /pets — só as do usuário logado
 export async function listar(req, res) {
   try {
@@ -16,7 +15,9 @@ export async function listar(req, res) {
       'SELECT id, raca, nome, porte, peso, usuarioId FROM pets WHERE usuarioId = ? ORDER BY id DESC',
       [req.usuarioId]
     );
+
     res.json(pets);
+
   } catch (erro) {
     console.error('[pets.listar]', erro);
     res.status(500).json({ mensagem: 'Erro ao buscar pets.' });
@@ -26,17 +27,23 @@ export async function listar(req, res) {
 // GET /pets/:id — só se o pet for do usuário logado
 export async function buscarPorId(req, res) {
   const { id } = req.params;
+
   try {
     const db = await getDatabase();
-    const pets = await db.get(
+
+    const pet = await db.get(
       'SELECT id, raca, nome, porte, peso, usuarioId FROM pets WHERE id = ? AND usuarioId = ?',
       [id, req.usuarioId]
     );
 
-    if (!pets) {
-      return res.status(404).json({ mensagem: 'Pet não encontrado.' });
+    if (!pet) {
+      return res.status(404).json({
+        mensagem: 'Pet não encontrado.'
+      });
     }
-    res.json(normalizarpetsaida(pets));
+
+    res.json(pet);
+
   } catch (erro) {
     console.error('[pets.buscarPorId]', erro);
     res.status(500).json({ mensagem: 'Erro ao buscar pet.' });
@@ -45,7 +52,7 @@ export async function buscarPorId(req, res) {
 
 // GET /pets/usuario/:usuarioId
 // Uso didático — mostra como filtrar por chave estrangeira.
-// Por segurança, só o próprio usuário pode listar as próprias pets
+// Por segurança, só o próprio usuário pode listar os próprios pets
 // por esse endpoint.
 export async function listarPorUsuario(req, res) {
   const usuarioIdSolicitado = Number(req.params.usuarioId);
@@ -58,14 +65,19 @@ export async function listarPorUsuario(req, res) {
 
   try {
     const db = await getDatabase();
+
     const pets = await db.all(
       'SELECT id, raca, nome, porte, peso, usuarioId FROM pets WHERE usuarioId = ? ORDER BY id DESC',
       [usuarioIdSolicitado]
     );
-    res.json(pets.map(normalizarpetsaida));
+
+    res.json(pets);
+
   } catch (erro) {
     console.error('[pets.listarPorUsuario]', erro);
-    res.status(500).json({ mensagem: 'Erro ao buscar pets do usuário.' });
+    res.status(500).json({
+      mensagem: 'Erro ao buscar pets do usuário.'
+    });
   }
 }
 
@@ -74,44 +86,60 @@ export async function criar(req, res) {
   const { raca, nome, porte, peso } = req.body;
 
   if (!nome || typeof nome !== 'string' || !nome.trim()) {
-    return res.status(400).json({ mensagem: 'Informe um nome válido.' });
+    return res.status(400).json({
+      mensagem: 'Informe um nome válido.'
+    });
   }
 
   try {
     const db = await getDatabase();
+
     const resultado = await db.run(
-      'INSERT INTO pets (raca, nome, porte, peso, usuarioId) VALUES (?, ?, ?, ?)',
-      [raca.trim(), nome?.trim() || null, statusFinal, req.usuarioId]
+      'INSERT INTO pets (raca, nome, porte, peso, usuarioId) VALUES (?, ?, ?, ?, ?)',
+      [
+        raca?.trim() || null,
+        nome.trim(),
+        porte || null,
+        peso || null,
+        req.usuarioId
+      ]
     );
 
     res.status(201).json({
       id: resultado.lastID,
-      raca: raca.trim(),
-      nome: nome?.trim() || null,
-      porte: porte,
-      peso: peso,
+      raca: raca?.trim() || null,
+      nome: nome.trim(),
+      porte: porte || null,
+      peso: peso || null,
       usuarioId: req.usuarioId
     });
+
   } catch (erro) {
     console.error('[pets.criar]', erro);
-    res.status(500).json({ mensagem: 'Erro ao criar pet.' });
+    res.status(500).json({
+      mensagem: 'Erro ao criar pet.'
+    });
   }
 }
 
-// PUT /pets/:id — atualização parcial. Só permite mexer na própria pets.
+// PUT /pets/:id — atualização parcial.
+// Só permite mexer no próprio pet.
 export async function atualizar(req, res) {
   const { id } = req.params;
-  const { raca, nome, porte, peso, usuarioId } = req.body;
+  const { raca, nome, porte, peso } = req.body;
 
   try {
     const db = await getDatabase();
+
     const atual = await db.get(
       'SELECT id, raca, nome, porte, peso, usuarioId FROM pets WHERE id = ? AND usuarioId = ?',
       [id, req.usuarioId]
     );
 
     if (!atual) {
-      return res.status(404).json({ mensagem: 'pets não encontrado.' });
+      return res.status(404).json({
+        mensagem: 'Pet não encontrado.'
+      });
     }
 
     // operador ?? mantém o valor atual quando o campo não vem no body
@@ -119,18 +147,16 @@ export async function atualizar(req, res) {
     const novoNome = nome ?? atual.nome;
     const novoPorte = porte ?? atual.porte;
     const novoPeso = peso ?? atual.peso;
-    const novoUsuarioId = usuarioId ?? atual.usuarioId;
-    let novoStatus = atual.status;
-    if (typeof concluida === 'boolean') {
-      novoCadastro = concluido ? 'Concluido' : 'Novo';
-    }
-    if (typeof status === 'string') {
-      novoStatus = normalizarStatus(status, atual.status);
-    }
 
     await db.run(
-      'UPDATE pets SET raca = ?, nome = ?, porte = ?, peso = ?, usuarioId = ? WHERE id = ?',
-      [novoRaca, novoNome, novoPorte, novoPeso, novoUsuarioId, id]
+      'UPDATE pets SET raca = ?, nome = ?, porte = ?, peso = ? WHERE id = ?',
+      [
+        novoRaca,
+        novoNome,
+        novoPorte,
+        novoPeso,
+        id
+      ]
     );
 
     res.json({
@@ -141,28 +167,41 @@ export async function atualizar(req, res) {
       peso: novoPeso,
       usuarioId: req.usuarioId
     });
+
   } catch (erro) {
     console.error('[pets.atualizar]', erro);
-    res.status(500).json({ mensagem: 'Erro ao atualizar pets.' });
+    res.status(500).json({
+      mensagem: 'Erro ao atualizar pet.'
+    });
   }
 }
 
 // DELETE /pets/:id
 export async function remover(req, res) {
   const { id } = req.params;
+
   try {
     const db = await getDatabase();
+
     const resultado = await db.run(
       'DELETE FROM pets WHERE id = ? AND usuarioId = ?',
       [id, req.usuarioId]
     );
 
     if (resultado.changes === 0) {
-      return res.status(404).json({ mensagem: 'pet não encontrado.' });
+      return res.status(404).json({
+        mensagem: 'Pet não encontrado.'
+      });
     }
-    res.json({ mensagem: 'pet removido com sucesso.' });
+
+    res.json({
+      mensagem: 'Pet removido com sucesso.'
+    });
+
   } catch (erro) {
     console.error('[pets.remover]', erro);
-    res.status(500).json({ mensagem: 'Erro ao remover pet.' });
+    res.status(500).json({
+      mensagem: 'Erro ao remover pet.'
+    });
   }
 }
