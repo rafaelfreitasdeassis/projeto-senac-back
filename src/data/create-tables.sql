@@ -27,21 +27,19 @@ CREATE TABLE IF NOT EXISTS servicos (
         preco NUMERIC(10,2)
       );
 
-CREATE TABLE IF NOT EXISTS agendamentos (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+CREATE TABLE agendamentos (
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 
     idPet INTEGER NOT NULL,
     idServico INTEGER NOT NULL,
 
-    data_agendamento DATE,
+    data_agendamento DATE NOT NULL,
+    hora_agendamento TIME NOT NULL,
+
+    status TEXT DEFAULT 'agendado',
 
     observacao TEXT,
 
-    FOREIGN KEY (idPet)
-        REFERENCES pets(id)
-        ON DELETE CASCADE,
-
-    FOREIGN KEY (idServico)
-        REFERENCES servicos(id)
-        ON DELETE CASCADE
+    FOREIGN KEY (idPet) REFERENCES pets(id),
+    FOREIGN KEY (idServico) REFERENCES servicos(id)
 );
