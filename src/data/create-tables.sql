@@ -28,18 +28,26 @@ CREATE TABLE IF NOT EXISTS servicos (
       );
 
 CREATE TABLE agendamentos (
-    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 
-    idPet INTEGER NOT NULL,
-    idServico INTEGER NOT NULL,
+  idPet INTEGER NOT NULL,
+  idServico INTEGER NOT NULL,
 
-    data_agendamento DATE NOT NULL,
-    hora_agendamento TIME NOT NULL,
+  data DATE NOT NULL,
+  hora TIME NOT NULL,
 
-    status TEXT DEFAULT 'agendado',
+  status TEXT DEFAULT 'agendado',
+  observacao TEXT,
 
-    observacao TEXT,
+  FOREIGN KEY (idPet) REFERENCES pets(id) ON DELETE CASCADE,
+  FOREIGN KEY (idServico) REFERENCES servicos(id) ON DELETE CASCADE
+);
 
-    FOREIGN KEY (idPet) REFERENCES pets(id),
-    FOREIGN KEY (idServico) REFERENCES servicos(id)
+CREATE TABLE agendas (
+  id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+
+  data DATE NOT NULL,
+  hora TIME NOT NULL,
+
+  ativo BOOLEAN DEFAULT TRUE
 );
