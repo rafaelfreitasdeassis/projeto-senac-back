@@ -3,6 +3,7 @@
 
 import { getDatabase } from '../data/db.js';
 
+
 // GET /agendamentos
 export async function listar(req, res) {
   try {
@@ -108,10 +109,10 @@ export async function criar(req, res) {
     }
 
     // 📅 2. verificar se horário está disponível
-    const disponibilidade = await db.get(
+    const agenda = await db.get(
       `
       SELECT *
-      FROM disponibilidade
+      FROM agendas
       WHERE data = ?
         AND hora = ?
         AND ativo = 1
@@ -119,7 +120,7 @@ export async function criar(req, res) {
       [data, hora]
     );
 
-    if (!disponibilidade) {
+    if (!agenda) {
       return res.status(409).json({
         mensagem: 'Horário não está disponível.'
       });
@@ -164,10 +165,10 @@ export async function criar(req, res) {
       ]
     );
 
-    // 🔒 5. bloquear horário na disponibilidade
+    // 🔒 5. bloquear horário na agenda
     await db.run(
       `
-      UPDATE disponibilidade
+      UPDATE agendas
       SET ativo = 0
       WHERE data = ? AND hora = ?
       `,
@@ -225,7 +226,6 @@ export async function atualizar(req, res) {
     const novaData = data ?? atual.data;
     const novaHora = hora ?? atual.hora;
 
-    // ⚠️ conflito ao alterar horário
     const conflito = await db.get(
       `
       SELECT id
@@ -301,7 +301,7 @@ export async function remover(req, res) {
     // 🔓 liberar horário novamente
     await db.run(
       `
-      UPDATE disponibilidade
+      UPDATE agendas
       SET ativo = 1
       WHERE data = ? AND hora = ?
       `,
