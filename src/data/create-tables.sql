@@ -1,53 +1,47 @@
-CREATE TABLE IF NOT EXISTS usuarios (
-        id        INTEGER PRIMARY KEY GENERATED ALWAYS as IDENTITY,
-        nome      TEXT NOT NULL,
-        email     TEXT NOT NULL UNIQUE,
-        telefone  TEXT,
-        senha     TEXT NOT NULL,
-        foto      TEXT,
-        tipoUsuario TEXT NOT NULL
 
-      );
+CREATE TABLE IF NOT EXISTS usuarios (
+  id INTEGER PRIMARY KEY GENERATED ALWAYS as IDENTITY,
+  nome TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  telefone TEXT,
+  senha TEXT NOT NULL,
+  foto TEXT,
+  tipoUsuario TEXT NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS pets (
-        id         INTEGER PRIMARY KEY GENERATED ALWAYS as IDENTITY,
-        nome     TEXT NOT NULL,
-        raca  TEXT,
-        porte TEXT,
-        peso NUMERIC(10,2),
-        usuarioId  INTEGER NOT NULL,
-       
-        FOREIGN KEY (usuarioId) REFERENCES usuarios (id) ON DELETE CASCADE
+  id INTEGER PRIMARY KEY GENERATED ALWAYS as IDENTITY,
+  nome TEXT NOT NULL,
+  raca TEXT,
+  porte TEXT,
+  peso NUMERIC(10,2),
+  usuarioId INTEGER NOT NULL,
+  FOREIGN KEY (usuarioId) REFERENCES usuarios (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS servicos (
-        id         INTEGER PRIMARY KEY GENERATED ALWAYS as IDENTITY,
-        nome     TEXT NOT NULL,
-        descricao  TEXT,
-        preco NUMERIC(10,2)
-      );
-
-CREATE TABLE agendamentos (
   id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  nome TEXT NOT NULL,
+  descricao TEXT,
+  preco NUMERIC(10,2)
+);
 
+CREATE TABLE IF NOT EXISTS agendamentos (
+  id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   idPet INTEGER NOT NULL,
   idServico INTEGER NOT NULL,
-
   data DATE NOT NULL,
   hora TIME NOT NULL,
-
   status TEXT DEFAULT 'agendado',
   observacao TEXT,
-
   FOREIGN KEY (idPet) REFERENCES pets(id) ON DELETE CASCADE,
   FOREIGN KEY (idServico) REFERENCES servicos(id) ON DELETE CASCADE
 );
 
-CREATE TABLE agendas (
+CREATE TABLE IF NOT EXISTS agendas (
   id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-
   data DATE NOT NULL,
   hora TIME NOT NULL,
-
-  ativo BOOLEAN DEFAULT TRUE
+  ativo BOOLEAN DEFAULT TRUE,
+  UNIQUE(data, hora)
 );
