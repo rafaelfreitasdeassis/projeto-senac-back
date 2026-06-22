@@ -1,7 +1,7 @@
 {
   "name": "api-rest-crud",
   "version": "1.0.0",
-  "description": "API REST didática com Express + Supabase/PostgreSQL — CRUD de usuários e tarefas, autenticação JWT e upload no Supabase Storage (SENAC / UC3)",
+  "description": "API REST didática com Express + Supabase/PostgreSQL — CRUD de usuários, pets, serviços, agendas, agendamentos, autenticação JWT e upload no Supabase Storage (SENAC / UC3)",
   "main": "index.js",
   "type": "module",
   "scripts": {
