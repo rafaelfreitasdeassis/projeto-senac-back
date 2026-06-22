@@ -24,9 +24,17 @@ export async function listar(req, res) {
 
 // GET /servicos/:id
 export async function buscarPorId(req, res) {
-  const { id } = req.params;
+
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({
+      mensagem: 'ID inválido.'
+    });
+  }
 
   try {
+
     const db = await getDatabase();
 
     const servico = await db.get(
@@ -43,6 +51,7 @@ export async function buscarPorId(req, res) {
     res.json(servico);
 
   } catch (erro) {
+
     console.error('[servicos.buscarPorId]', erro);
 
     res.status(500).json({
@@ -66,9 +75,17 @@ export async function criar(req, res) {
     });
   }
 
-  if (preco == null || isNaN(preco)) {
+  const precoNumerico = Number(preco);
+
+  if (Number.isNaN(precoNumerico)) {
     return res.status(400).json({
       mensagem: 'Preço inválido.'
+    });
+  }
+
+  if (precoNumerico < 0) {
+    return res.status(400).json({
+      mensagem: 'Preço deve ser maior ou igual a zero.'
     });
   }
 
@@ -88,15 +105,15 @@ export async function criar(req, res) {
       [
         nome.trim(),
         descricao?.trim() || null,
-        preco
+        precoNumerico
       ]
     );
 
     res.status(201).json({
-      id: resultado.lastID,
+      id: Number(resultado.lastID),
       nome: nome.trim(),
       descricao: descricao?.trim() || null,
-      preco
+      preco: precoNumerico
     });
 
   } catch (erro) {
@@ -112,13 +129,42 @@ export async function criar(req, res) {
 // PUT /servicos/:id
 export async function atualizar(req, res) {
 
-  const { id } = req.params;
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({
+      mensagem: 'ID inválido.'
+    });
+  }
 
   const {
     nome,
     descricao,
     preco
   } = req.body;
+
+  if (nome !== undefined && !nome.trim()) {
+    return res.status(400).json({
+      mensagem: 'Nome do serviço é obrigatório.'
+    });
+  }
+
+  if (preco !== undefined) {
+
+    const precoNumerico = Number(preco);
+
+    if (Number.isNaN(precoNumerico)) {
+      return res.status(400).json({
+        mensagem: 'Preço inválido.'
+      });
+    }
+
+    if (precoNumerico < 0) {
+      return res.status(400).json({
+        mensagem: 'Preço deve ser maior ou igual a zero.'
+      });
+    }
+  }
 
   try {
 
@@ -135,9 +181,20 @@ export async function atualizar(req, res) {
       });
     }
 
-    const novoNome = nome ?? atual.nome;
-    const novaDescricao = descricao ?? atual.descricao;
-    const novoPreco = preco ?? atual.preco;
+    const novoNome =
+      nome !== undefined
+        ? nome.trim()
+        : atual.nome;
+
+    const novaDescricao =
+      descricao !== undefined
+        ? descricao?.trim() || null
+        : atual.descricao;
+
+    const novoPreco =
+      preco !== undefined
+        ? Number(preco)
+        : atual.preco;
 
     await db.run(
       `
@@ -157,7 +214,7 @@ export async function atualizar(req, res) {
     );
 
     res.json({
-      id: Number(id),
+      id,
       nome: novoNome,
       descricao: novaDescricao,
       preco: novoPreco
@@ -176,7 +233,13 @@ export async function atualizar(req, res) {
 // DELETE /servicos/:id
 export async function remover(req, res) {
 
-  const { id } = req.params;
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({
+      mensagem: 'ID inválido.'
+    });
+  }
 
   try {
 
