@@ -361,6 +361,7 @@ export async function login(req, res) {
 export async function perfil(req, res) {
   try {
     const db = await getDatabase();
+
     const usuario = await db.get(
       `
       SELECT
@@ -377,22 +378,19 @@ export async function perfil(req, res) {
     );
 
     if (!usuario) {
-      return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
+      return res.status(404).json({
+        mensagem: 'Usuário não encontrado.'
+      });
     }
-    res.json(usuario);
-  tipoUsuario
-FROM usuarios
-WHERE id = ?',
-      [req.usuarioId]
-    );
 
-    if (!usuario) {
-      return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
-    }
     res.json(usuario);
+
   } catch (erro) {
+
     console.error('[usuarios.perfil]', erro);
-    res.status(500).json({ mensagem: 'Erro ao buscar perfil.' });
+
+    res.status(500).json({
+      mensagem: 'Erro ao buscar perfil.'
+    });
   }
 }
-
