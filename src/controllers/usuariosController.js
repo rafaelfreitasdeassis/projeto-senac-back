@@ -224,8 +224,6 @@ export async function atualizar(req, res) {
       req.body?.foto ??
       atual.foto;
 
-    // usuário comum não pode alterar o próprio perfil de acesso
-    const novoTipoUsuario = atual.tipoUsuario;
 
     let novaSenha = atual.senha;
 
@@ -248,7 +246,6 @@ export async function atualizar(req, res) {
         telefone = ?,
         senha = ?,
         foto = ?,
-        tipoUsuario = ?
       WHERE id = ?
       `,
       [
@@ -257,7 +254,6 @@ export async function atualizar(req, res) {
         novoTelefone,
         novaSenha,
         novaFoto,
-        novoTipoUsuario,
         idAlvo
       ]
     );
@@ -267,8 +263,7 @@ export async function atualizar(req, res) {
       nome: novoNome,
       email: novoEmail,
       telefone: novoTelefone,
-      foto: novaFoto,
-      tipoUsuario: novoTipoUsuario
+      foto: novaFoto
     });
 
   } catch (erro) {
