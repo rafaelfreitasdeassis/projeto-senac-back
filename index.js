@@ -14,6 +14,7 @@ import clienteRoutes from './src/routes/clienteRoutes.js';
 import petRoutes from './src/routes/petRoutes.js';
 import servicoRoutes from './src/routes/servicoRoutes.js';
 import agendamentoRoutes from './src/routes/agendamentoRoutes.js';
+import agendasRoutes from './routes/agendasRoutes.js';
 
 const app = express();
 
@@ -43,7 +44,7 @@ app.use(express.json());
 // cada grupo de rotas é montado sob um prefixo
 // /usuarios cobre: cadastro, login, perfil e o CRUD de usuários.
 app.use('/usuarios', usuariosRoutes);
-app.use('/tarefas', tarefasRoutes);  // CRUD de tarefas (protegido por JWT)
+app.use('/agendas', agendasRoutes);
 
 // rota raiz só para health-check rápido no navegador
 app.get('/', (req, res) => {
@@ -54,7 +55,6 @@ app.get('/', (req, res) => {
       'POST /usuarios/login',
       'GET  /usuarios/perfil',
       '/usuarios',
-      '/tarefas'
     ]
   });
 });
