@@ -44,7 +44,6 @@ app.use(express.json());
 // cada grupo de rotas é montado sob um prefixo
 // /usuarios cobre: cadastro, login, perfil e o CRUD de usuários.
 
-app.use('/clientes', clientesRoutes);
 
 app.use('/agendamentos', agendamentosRoutes);
 app.use('/agendas', agendasRoutes);
