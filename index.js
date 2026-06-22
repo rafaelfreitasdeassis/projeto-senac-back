@@ -9,8 +9,6 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 
-import authRoutes from './src/routes/authRoutes.js';
-import clientesRoutes from './src/routes/clientesRoutes.js';
 
 import agendamentosRoutes from './src/routes/agendamentosRoutes.js';
 import agendasRoutes from './src/routes/agendasRoutes.js';
