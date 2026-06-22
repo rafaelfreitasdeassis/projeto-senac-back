@@ -245,7 +245,7 @@ export async function atualizar(req, res) {
         email = ?,
         telefone = ?,
         senha = ?,
-        foto = ?,
+        foto = ?
       WHERE id = ?
       `,
       [
