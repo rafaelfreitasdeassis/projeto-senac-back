@@ -11,10 +11,11 @@ import helmet from 'helmet';
 
 import authRoutes from './src/routes/authRoutes.js';
 import clienteRoutes from './src/routes/clienteRoutes.js';
-import petRoutes from './src/routes/petRoutes.js';
-import servicoRoutes from './src/routes/servicoRoutes.js';
-import agendamentoRoutes from './src/routes/agendamentoRoutes.js';
+import agendamentosRoutes from './routes/agendamentosRoutes.js';
 import agendasRoutes from './routes/agendasRoutes.js';
+import petsRoutes from './src/routes/petsRoutes.js';
+import servicosRoutes from './src/routes/servicosRoutes.js';
+import usuariosRoutes from './routes/usuariosRoutes.js';
 
 const app = express();
 
@@ -43,8 +44,12 @@ app.use(express.json());
 
 // cada grupo de rotas é montado sob um prefixo
 // /usuarios cobre: cadastro, login, perfil e o CRUD de usuários.
-app.use('/usuarios', usuariosRoutes);
+
+app.use('/agendamentos', agendamentosRoutes);
 app.use('/agendas', agendasRoutes);
+app.use('/pets', petsRoutes);
+app.use('/servicos', servicosRoutes);
+app.use('/usuarios', usuariosRoutes);
 
 // rota raiz só para health-check rápido no navegador
 app.get('/', (req, res) => {
