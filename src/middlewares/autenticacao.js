@@ -18,8 +18,7 @@ export function autenticarJWT(req, res, next) {
     return res.status(401).json({ mensagem: 'Token não enviado.' });
   }
 
-  // separa "Bearer" do token em si
-  const token = headerAuth.split(' ')[1];
+  const token = headerAuth.split(' ')[1];        // separa "Bearer" do token em si
 
   try {
     // jwt.verify lança exceção se o token estiver inválido, expirado
@@ -29,6 +28,8 @@ export function autenticarJWT(req, res, next) {
     // disponibiliza dados do usuário logado para os controllers
     req.usuarioId = payload.usuarioId;
     req.usuarioNome = payload.nome;
+    
+    req.usuarioTipo = payload.tipoUsuario;            // Propaga o tipo de usuário (cliente/admin), para checagens de autorização (ex: buscarPorId, listar)
 
     return next();
   } catch (erro) {
