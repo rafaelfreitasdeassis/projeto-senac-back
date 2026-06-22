@@ -26,7 +26,7 @@ router.post('/login', controller.login);       // login → devolve JWT
 
 // rotas protegidas (precisam do header Authorization: Bearer <token>)
 router.get('/perfil', autenticarJWT, controller.perfil);   // antes de /:id
-router.get('/', autenticarJWT, controller.listar);
+router.get('/', controller.listar);
 router.get('/:id', autenticarJWT, controller.buscarPorId);
 router.put('/:id', autenticarJWT, controller.atualizar);
 router.delete('/:id', autenticarJWT, controller.remover);
